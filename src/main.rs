@@ -10,6 +10,5 @@ fn main() {
     let pair = TradingPair::new("BTC".to_string(), "USD".to_string());
     engine.add_new_market(pair.clone());
     let buy_order = Order::new(BidOrAsk::Bid, 5.5);
-    engine.place_limit_order(pair, 10.000, buy_order).unwrap();
-    
+    engine.place_limit_order(pair, 10.000, buy_order).unwrap();  
 }
