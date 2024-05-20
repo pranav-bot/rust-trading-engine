@@ -1,135 +1,127 @@
-# OrderBook System
+Certainly! Here's a detailed `README.md` for your multi-file Rust project implementing an order book and a matching engine.
 
-## Overview
+---
 
-This project is an implementation of a basic order book for a trading system, written in Rust. An order book is a collection of buy and sell orders organized by price levels. This system allows the addition of buy (bid) orders and sell (ask) orders to the order book and organizes them by price. The order book is capable of handling orders, grouping them into price levels, and maintaining the order at each level.
+# Order Book
 
-## Components
+This project implements an order book and a matching engine for managing and matching buy (bid) and sell (ask) orders in a financial market.
 
-### 1. Enums
+## Project Structure
 
-#### `BidOrAsk`
+```
+order_book/
+├── src/
+│   ├── main.rs
+│   ├── matching_engine/
+│   │   ├── mod.rs
+│   │   ├── orderbook.rs
+│   │   └── engine.rs
+├── Cargo.toml
+└── README.md
+```
 
-This enum represents whether an order is a bid (buy) or an ask (sell).
+### Main Components
+
+- **main.rs**: The entry point of the application.
+- **matching_engine/mod.rs**: The module declaration for the matching engine.
+- **matching_engine/orderbook.rs**: Contains the `OrderBook`, `Order`, `Limit`, `Price`, and `BidOrAsk` enums.
+- **matching_engine/engine.rs**: Contains the `MatchingEngine` and `TradingPair` structs.
+
+## Getting Started
+
+### Prerequisites
+
+Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
+
+### Running the Application
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/yourusername/order_book.git
+    cd order_book
+    ```
+
+2. Build and run the application:
+    ```bash
+    cargo run
+    ```
+
+## Code Overview
+
+### main.rs
 
 ```rust
-#[derive(Debug)]
-enum BidOrAsk {
-    Bid,
-    Ask
+mod matching_engine;
+use matching_engine::engine::{MatchingEngine, TradingPair};
+use matching_engine::orderbook::{Order, OrderBook, BidOrAsk};
+
+fn main() {
+    let buy_order = Order::new(BidOrAsk::Bid, 5.5);
+    let mut orderbook = OrderBook::new();  
+    orderbook.add_order(4.4, buy_order);
+    //println!("{:?}", orderbook);
+    
+    let mut engine = MatchingEngine::new();
+    let pair = TradingPair::new("BTC".to_string(), "USD".to_string());
+    engine.add_new_market(pair.clone());
+    
+    let buy_order = Order::new(BidOrAsk::Bid, 5.5);
+    engine.place_limit_order(pair, 10.000, buy_order).unwrap();
 }
 ```
 
-### 2. Structures
+This is the entry point of the application where:
+- An `OrderBook` is created, and a buy order is added.
+- A `MatchingEngine` is initialized, and a new market (trading pair) is added.
+- A buy order is placed in the matching engine's order book for the specified trading pair.
 
-#### `OrderBook`
+### matching_engine/orderbook.rs
 
-The `OrderBook` struct contains two hash maps: one for asks (sell orders) and one for bids (buy orders). Each hash map uses `Price` as the key and `Limit` as the value.
+Defines the `OrderBook` and related structures:
 
-```rust
-#[derive(Debug)]
-struct OrderBook {
-    asks: HashMap<Price, Limit>,
-    bids: HashMap<Price, Limit>,
-}
-```
+- **BidOrAsk**: Enum to differentiate between bid (buy) and ask (sell) orders.
+- **OrderBook**: Struct managing `bids` and `asks` at various price levels.
+- **Order**: Struct representing an order with size and type (bid or ask).
+- **Limit**: Struct grouping orders at a specific price.
+- **Price**: Struct for precise price representation, split into integral and fractional parts.
 
-##### Methods
+### matching_engine/engine.rs
 
-- `new() -> OrderBook`: Initializes a new `OrderBook` with empty hash maps for bids and asks.
-- `add_order(&mut self, price: f64, order: Order)`: Adds an order to the order book at the specified price. The order is added to the bids if it is a bid, otherwise to the asks.
+Defines the `MatchingEngine` and `TradingPair`:
 
-#### `Price`
+- **TradingPair**: Struct representing a trading pair (e.g., BTC/USD).
+- **MatchingEngine**: Struct managing multiple order books for different trading pairs.
+    - `add_new_market`: Adds a new trading pair to the matching engine.
+    - `place_limit_order`: Places a limit order in the order book for the specified trading pair.
 
-The `Price` struct represents a price level in the order book. It separates the integral and fractional parts of the price for precision.
+### matching_engine/mod.rs
 
-```rust
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-struct Price {
-    integral: u64,
-    fractional: u64,
-    scalar: u64,
-}
-```
-
-##### Methods
-
-- `new(price: f64) -> Price`: Creates a new `Price` from a floating-point number by separating the integral and fractional parts and using a fixed scalar for precision.
-
-#### `Limit`
-
-The `Limit` struct represents a price level that contains multiple orders.
+Module declaration to include `orderbook` and `engine` modules.
 
 ```rust
-#[derive(Debug)]
-struct Limit {
-    price: Price,
-    orders: Vec<Order>,
-}
+pub mod orderbook;
+pub mod engine;
 ```
 
-##### Methods
-
-- `new(price: Price) -> Limit`: Initializes a new `Limit` at the specified price with an empty vector of orders.
-- `add_order(&mut self, order: Order)`: Adds an order to the limit.
-
-#### `Order`
-
-The `Order` struct represents an individual order with a size and whether it is a bid or ask.
-
-```rust
-#[derive(Debug)]
-struct Order {
-    size: f64,
-    bid_or_ask: BidOrAsk
-}
-```
-
-##### Methods
-
-- `new(bid_or_ask: BidOrAsk, size: f64) -> Order`: Creates a new order with the specified type (bid or ask) and size.
-
-## Usage
-
-Here's an example of how to use the order book system:
+## Example Usage
 
 ```rust
 fn main() {
+    let mut engine = MatchingEngine::new();
+    let pair = TradingPair::new("BTC".to_string(), "USD".to_string());
+    engine.add_new_market(pair.clone());
+
     let buy_order = Order::new(BidOrAsk::Bid, 5.5);
-    let mut orderbook = OrderBook::new();
-    orderbook.add_order(4.4, buy_order);
-    println!("{:?}", orderbook);
+    engine.place_limit_order(pair, 10.000, buy_order).unwrap();
 }
 ```
 
-This code creates a new order book, adds a buy order for 5.5 units at the price of 4.4, and prints the state of the order book.
+This example initializes the matching engine, adds a new market (BTC/USD), and places a buy order at a specific price.
 
-## Building and Running
+## Contributing
 
-To build and run the project, you need to have Rust installed on your machine. Follow these steps:
+Feel free to submit pull requests or open issues to improve the project.
 
-1. Clone the repository:
-   ```sh
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
+---
 
-2. Build the project:
-   ```sh
-   cargo build
-   ```
-
-3. Run the project:
-   ```sh
-   cargo run
-   ```
-
-## Future Enhancements
-
-- **Ask Orders**: Implement the logic to handle ask (sell) orders in the `add_order` method.
-- **Order Matching**: Add functionality to match orders and execute trades.
-- **Order Removal**: Add methods to remove or update orders.
-- **Persistence**: Implement persistent storage for the order book to retain state across sessions.
-- **Improved Precision**: Enhance the `Price` struct to handle more complex decimal manipulations.
-
-This README provides an overview and usage guide for the order book system.
+This README provides an overview of the project, how to get started, and a brief explanation of the main components and their functionalities.
