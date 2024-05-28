@@ -1,7 +1,3 @@
-Certainly! Here's a detailed `README.md` for your multi-file Rust project implementing an order book and a matching engine.
-
----
-
 # Order Book
 
 This project implements an order book and a matching engine for managing and matching buy (bid) and sell (ask) orders in a financial market.
